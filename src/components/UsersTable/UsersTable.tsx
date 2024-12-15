@@ -69,12 +69,12 @@ const UsersTable = ({ setOpen }: UsersTableProps) => {
                 </TableCell>
                 <TableCell>{`${user.last_name} ${user.first_name[0]}.`}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>Не указано</TableCell> <TableCell>Не указано</TableCell>{" "}
+                <TableCell>Не указано</TableCell> <TableCell>Не указано</TableCell>
                 <TableCell>
                   <Button
                     variant="outlined"
                     size="small"
-                    startIcon={<EditIcon sx={{ marginRight: 0 }} />}
+                    startIcon={<EditIcon sx={{ marginLeft: "8px" }} />}
                     sx={{ marginRight: "10px" }}
                     onClick={() => setOpen(true)}
                   ></Button>
@@ -83,7 +83,7 @@ const UsersTable = ({ setOpen }: UsersTableProps) => {
                     color="error"
                     size="small"
                     sx={{ marginRight: "10px" }}
-                    startIcon={<DeleteIcon sx={{ marginRight: 0 }} />}
+                    startIcon={<DeleteIcon sx={{ marginLeft: "8px" }} />}
                   ></Button>
                 </TableCell>
               </TableRow>

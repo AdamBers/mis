@@ -7,12 +7,13 @@ import {
   Select,
   InputLabel,
   FormControl,
-  IconButton,
   CircularProgress,
   Grid,
+  Autocomplete,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getUsers } from "../../api/users";
+import { isAdult } from "../../utils/isAdult";
 
 interface UsersFormProps {
   open: boolean;
@@ -31,17 +32,33 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
   const [jobDescription, setJobDescription] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const fetchUsersData = async () => {
+      setLoading(true);
+      try {
+        const users = await getUsers(1);
+        setUserList(users);
+      } catch (error) {
+        console.error("Ошибка при загрузке пользователей:", error);
+      }
+      setLoading(false);
+    };
+    fetchUsersData();
+  }, []);
+
   const handleClose = () => {
     setOpen(false);
   };
 
-  const fetchUsers = async (search) => {
-    setLoading(true);
-
-    setLoading(false);
+  const handleScroll = (event: React.UIEvent<HTMLUListElement>) => {
+    const target = event.currentTarget;
+    const bottom = target.scrollHeight === target.scrollTop + target.clientHeight;
+    if (bottom && !loading) {
+      console.log("Reached bottom of the list");
+    }
   };
 
-  const handleGenderChange = (event) => {
+  const handleGenderChange = (event: React.ChangeEvent<{ value: string }>) => {
     const selectedGender = event.target.value;
     setGender(selectedGender);
 
@@ -52,7 +69,7 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
     }
   };
 
-  const handleRoleChange = (event) => {
+  const handleRoleChange = (event: React.ChangeEvent<{ value: string }>) => {
     const selectedRole = event.target.value;
     setRole(selectedRole);
 
@@ -63,17 +80,13 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
     }
   };
 
-  const handleSubmit = () => {
-    // Логика отправки данных
-  };
-
-  const isAdult = (dob) => {
-    const age = new Date().getFullYear() - new Date(dob).getFullYear();
-    return age >= 18;
+  const handleSubmit = () => {};
+  const handleSearch = (event: React.ChangeEvent<{}>, value: string) => {
+    setSearchTerm(value);
   };
 
   return (
-    <Modal open={open} onClose={handleClose}>
+    <Modal open={open} onClose={() => setOpen(false)}>
       <Box
         sx={{
           backgroundColor: "#fff",
@@ -84,37 +97,29 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
           marginTop: 2,
         }}
       >
-        <IconButton onClick={handleClose} sx={{ position: "absolute", right: 10, top: 10 }}>
-          <CloseIcon />
-        </IconButton>
-
-        <h2>Форма создания/редактирования пользователя</h2>
-
-        {/* О себе */}
+        <h2>Форма</h2>
         <section>
           <h3>О себе</h3>
           <FormControl fullWidth sx={{ marginBottom: 2 }}>
-            <InputLabel>Пользователь</InputLabel>
-            <Select
-              label="Пользователь"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onBlur={() => fetchUsers(searchTerm)}
-              MenuProps={{ PaperProps: { style: { maxHeight: 200 } } }}
-            >
-              {userList.map((user) => (
-                <MenuItem key={user.id} value={user.id}>
-                  {user.last_name} {user.first_name.charAt(0)}.
-                </MenuItem>
-              ))}
-              {searchTerm && !userList.find((user) => user.last_name === searchTerm) && (
-                <MenuItem value="addNew">Добавить нового пользователя</MenuItem>
-              )}
-            </Select>
+            <Autocomplete
+              disablePortal
+              options={userList}
+              getOptionLabel={(option) => `${option.last_name} ${option.first_name.charAt(0)}.`}
+              onInputChange={handleSearch}
+              renderInput={(params) => <TextField {...params} label="Пользователь" />}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              loading={loading}
+              noOptionsText="Нет пользователей"
+              slotProps={{
+                listbox: {
+                  onScroll: handleScroll,
+                  style: { maxHeight: 200, overflow: "auto" },
+                },
+              }}
+            />
           </FormControl>
 
           <Grid container spacing={2} sx={{ marginBottom: 2 }}>
-            {/* Пол и Роль */}
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="Пол" select value={gender} onChange={handleGenderChange}>
                 <MenuItem value="Мужской">Мужской</MenuItem>
@@ -123,8 +128,8 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField fullWidth label="Роль" select value={role} onChange={handleRoleChange}>
-                {gender !== "Женский" && <MenuItem value="Медбрат">Медбрат</MenuItem>}
-                {gender !== "Мужской" && <MenuItem value="Медсестра">Медсестра</MenuItem>}
+                <MenuItem value="Медбрат">Медбрат</MenuItem>
+                <MenuItem value="Медсестра">Медсестра</MenuItem>
                 <MenuItem value="Доктор">Доктор</MenuItem>
                 <MenuItem value="Админ">Админ</MenuItem>
               </TextField>
@@ -140,7 +145,7 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
                 InputLabelProps={{ shrink: true }}
-                error={dob && !isAdult(dob)}
+                error={dob && !isAdult(dob) ? true : false}
                 helperText={dob && !isAdult(dob) ? "Возраст должен быть не младше 18 лет" : ""}
                 sx={{ input: { cursor: "pointer" } }}
               />
@@ -148,7 +153,6 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
           </Grid>
         </section>
 
-        {/* Образование */}
         <section>
           <h3>Образование</h3>
           <TextField
@@ -168,7 +172,6 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
           />
         </section>
 
-        {/* Работа */}
         <section>
           <h3>Работа</h3>
           <TextField
@@ -178,12 +181,21 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
             onChange={(e) => setWorkplace(e.target.value)}
             sx={{ marginBottom: 2 }}
           />
+          {/* <TextField
+            fullWidth
+            label="Должностные обязанности"
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            sx={{ marginBottom: 2 }}
+          /> */}
           <TextField
             fullWidth
             label="Должностные обязанности"
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
             sx={{ marginBottom: 2 }}
+            multiline
+            rows={3} // Устанавливаем количество строк в textarea
           />
         </section>
 
