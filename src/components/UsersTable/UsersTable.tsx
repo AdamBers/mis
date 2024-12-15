@@ -16,7 +16,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { getUsers } from "../../api/users"; // Импортируем функцию для получения пользователей
 import { IUserResponse } from "../../types/user";
 
-const UsersTable = ({ setOpen }) => {
+interface UsersTableProps {
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const UsersTable = ({ setOpen }: UsersTableProps) => {
   const [users, setUsers] = useState<IUserResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 

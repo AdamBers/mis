@@ -9,39 +9,57 @@ import {
   FormControl,
   IconButton,
   CircularProgress,
+  Grid,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useState } from "react";
 
-const UsersForm = ({ open, setOpen }) => {
-  const [userList, setUserList] = useState([]); // Список пользователей
-  const [searchTerm, setSearchTerm] = useState(""); // Для поиска
-  const [gender, setGender] = useState(""); // Пол
-  const [role, setRole] = useState(""); // Роль
-  const [dob, setDob] = useState(""); // Дата рождения
-  const [university, setUniversity] = useState(""); // ВУЗ
-  const [graduationYear, setGraduationYear] = useState(""); // Год окончания
-  const [workplace, setWorkplace] = useState(""); // Место работы
-  const [jobDescription, setJobDescription] = useState(""); // Должностные обязанности
-  const [loading, setLoading] = useState(false); // Лоадер для загрузки списка
+interface UsersFormProps {
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const UsersForm = ({ open, setOpen }: UsersFormProps) => {
+  const [userList, setUserList] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [gender, setGender] = useState("");
+  const [role, setRole] = useState("");
+  const [dob, setDob] = useState("");
+  const [university, setUniversity] = useState("");
+  const [graduationYear, setGraduationYear] = useState("");
+  const [workplace, setWorkplace] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleClose = () => {
     setOpen(false);
   };
 
-  // Метод для получения пользователей по запросу
   const fetchUsers = async (search) => {
     setLoading(true);
-    // Логика запроса пользователей
+
     setLoading(false);
   };
 
   const handleGenderChange = (event) => {
-    setGender(event.target.value);
-    if (event.target.value === "Мужской") {
+    const selectedGender = event.target.value;
+    setGender(selectedGender);
+
+    if (selectedGender === "Мужской" && role === "Медсестра") {
       setRole("Медбрат");
-    } else if (event.target.value === "Женский") {
+    } else if (selectedGender === "Женский" && role === "Медбрат") {
       setRole("Медсестра");
+    }
+  };
+
+  const handleRoleChange = (event) => {
+    const selectedRole = event.target.value;
+    setRole(selectedRole);
+
+    if (selectedRole === "Медсестра") {
+      setGender("Женский");
+    } else if (selectedRole === "Медбрат") {
+      setGender("Мужской");
     }
   };
 
@@ -56,7 +74,16 @@ const UsersForm = ({ open, setOpen }) => {
 
   return (
     <Modal open={open} onClose={handleClose}>
-      <Box sx={{ backgroundColor: "#fff", width: "60vw", minHeight: "60vh", margin: "auto", padding: 2 }}>
+      <Box
+        sx={{
+          backgroundColor: "#fff",
+          maxWidth: "768px",
+          margin: "auto",
+          padding: 3,
+          borderRadius: 3,
+          marginTop: 2,
+        }}
+      >
         <IconButton onClick={handleClose} sx={{ position: "absolute", right: 10, top: 10 }}>
           <CloseIcon />
         </IconButton>
@@ -86,44 +113,39 @@ const UsersForm = ({ open, setOpen }) => {
             </Select>
           </FormControl>
 
-          <TextField fullWidth label="Пол" select value={gender} onChange={handleGenderChange} sx={{ marginBottom: 2 }}>
-            <MenuItem value="Мужской">Мужской</MenuItem>
-            <MenuItem value="Женский">Женский</MenuItem>
-          </TextField>
-
-          <TextField
-            fullWidth
-            label="Роль"
-            select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            sx={{ marginBottom: 2 }}
-          >
-            {gender && gender === "Мужской" && <MenuItem value="Медбрат">Медбрат</MenuItem>}
-            {gender && gender === "Женский" && <MenuItem value="Медсестра">Медсестра</MenuItem>}
-            {!gender && (
-              <>
+          <Grid container spacing={2} sx={{ marginBottom: 2 }}>
+            {/* Пол и Роль */}
+            <Grid item xs={12} sm={6}>
+              <TextField fullWidth label="Пол" select value={gender} onChange={handleGenderChange}>
+                <MenuItem value="Мужской">Мужской</MenuItem>
+                <MenuItem value="Женский">Женский</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField fullWidth label="Роль" select value={role} onChange={handleRoleChange}>
+                {gender !== "Женский" && <MenuItem value="Медбрат">Медбрат</MenuItem>}
+                {gender !== "Мужской" && <MenuItem value="Медсестра">Медсестра</MenuItem>}
                 <MenuItem value="Доктор">Доктор</MenuItem>
-                <MenuItem value="Медсестра">Медсестра</MenuItem>
-                <MenuItem value="Медбрат">Медбрат</MenuItem>
-              </>
-            )}
-            <MenuItem value="Админ">Админ</MenuItem>
-          </TextField>
+                <MenuItem value="Админ">Админ</MenuItem>
+              </TextField>
+            </Grid>
+          </Grid>
 
-          <TextField
-            fullWidth
-            label="Дата рождения"
-            type="date"
-            value={dob}
-            onChange={(e) => setDob(e.target.value)}
-            sx={{ marginBottom: 2 }}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            error={dob && !isAdult(dob)}
-            helperText={dob && !isAdult(dob) ? "Возраст должен быть не младше 18 лет" : ""}
-          />
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Дата рождения"
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                error={dob && !isAdult(dob)}
+                helperText={dob && !isAdult(dob) ? "Возраст должен быть не младше 18 лет" : ""}
+                sx={{ input: { cursor: "pointer" } }}
+              />
+            </Grid>
+          </Grid>
         </section>
 
         {/* Образование */}
@@ -165,7 +187,13 @@ const UsersForm = ({ open, setOpen }) => {
           />
         </section>
 
-        <Button variant="contained" color="primary" onClick={handleSubmit} fullWidth sx={{ marginBottom: 2 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSubmit}
+          fullWidth
+          sx={{ marginBottom: 2, width: "max-content", display: "block", marginLeft: "auto", marginRight: "auto" }}
+        >
           Добавить/Сохранить
         </Button>
 

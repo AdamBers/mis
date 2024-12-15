@@ -3,7 +3,7 @@ import UsersTable from "./components/UsersTable/UsersTable";
 import UsersForm from "./components/UsersForm/UsersForm";
 
 function App() {
-  const [modalOpen, setModalOpen] = useState(true);
+  const [modalOpen, setModalOpen] = useState<boolean>(true);
   return (
     <>
       <UsersForm open={modalOpen} setOpen={setModalOpen} />
