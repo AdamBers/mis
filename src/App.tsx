@@ -1,9 +1,15 @@
-import { getUsers } from "./api/users";
+import { useState } from "react";
+import UsersTable from "./components/UsersTable/UsersTable";
+import UsersForm from "./components/UsersForm/UsersForm";
 
 function App() {
-  const users = getUsers(1);
-  users.then((data) => console.log(data));
-  return <>1</>;
+  const [modalOpen, setModalOpen] = useState(true);
+  return (
+    <>
+      <UsersForm open={modalOpen} setOpen={setModalOpen} />
+      <UsersTable setOpen={setModalOpen} />
+    </>
+  );
 }
 
 export default App;

@@ -1,8 +1,5 @@
 import axios from "axios";
-
-const api = axios.create({
-  baseURL: "https://reqres.in/api",
-});
+import { items_per_page } from "../constants";
 
 interface IUser {
   id: number;
@@ -12,10 +9,14 @@ interface IUser {
   avatar: string;
 }
 
+const api = axios.create({
+  baseURL: "https://reqres.in/api",
+});
+
 export const getUsers = async (page: number = 1): Promise<IUser[]> => {
   try {
     const response = await api.get("/users", {
-      params: { page, per_page: 8 },
+      params: { page, per_page: items_per_page },
     });
     localStorage.setItem("users", JSON.stringify(response.data.data));
     localStorage.setItem("total_pages", response.data.total_pages.toString());

@@ -73,3 +73,10 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.MuiTableHead-root .MuiTableCell-root {
+  font-weight: bold;
+  background-color: #f0f0f076;
+  text-align: center;
+  border-right: 1px solid #d3d3d3;
+}
