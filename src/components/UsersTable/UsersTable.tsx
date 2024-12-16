@@ -28,7 +28,7 @@ const UsersTable = ({ setOpen }: UsersTableProps) => {
     const fetchUsers = async () => {
       try {
         const fetchedUsers = await getUsers(); // Получаем пользователей
-        setUsers(fetchedUsers);
+        setUsers(fetchedUsers.data);
       } catch (error) {
         console.error("Ошибка при загрузке пользователей", error);
       } finally {
@@ -69,7 +69,8 @@ const UsersTable = ({ setOpen }: UsersTableProps) => {
                 </TableCell>
                 <TableCell>{`${user.last_name} ${user.first_name[0]}.`}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>Не указано</TableCell> <TableCell>Не указано</TableCell>
+                <TableCell>Не указано</TableCell>
+                <TableCell>Не указано</TableCell>
                 <TableCell>
                   <Button
                     variant="outlined"

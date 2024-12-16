@@ -1,7 +1,8 @@
+// users.ts
 import axios from "axios";
 import { items_per_page } from "../constants";
 
-interface IUser {
+export interface IUser {
   id: number;
   email: string;
   first_name: string;
@@ -9,18 +10,21 @@ interface IUser {
   avatar: string;
 }
 
+export interface GetUsersResponse {
+  data: IUser[];
+  total_pages: number;
+}
+
 const api = axios.create({
   baseURL: "https://reqres.in/api",
 });
 
-export const getUsers = async (page: number = 1): Promise<IUser[]> => {
+export const getUsers = async (page: number = 1): Promise<GetUsersResponse> => {
   try {
     const response = await api.get("/users", {
       params: { page, per_page: items_per_page },
     });
-    // localStorage.setItem("users", JSON.stringify(response.data.data));
-    // localStorage.setItem("total_pages", response.data.total_pages.toString());
-    return response.data.data;
+    return response.data; // Возвращаем весь объект с data и total_pages
   } catch (error) {
     console.error("Ошибка при загрузке пользователей:", error);
     throw error;

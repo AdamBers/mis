@@ -1,18 +1,18 @@
+// UsersForm.tsx
 import {
   Modal,
   Button,
   Box,
   TextField,
   MenuItem,
-  Select,
-  InputLabel,
   FormControl,
   CircularProgress,
   Grid,
   Autocomplete,
 } from "@mui/material";
-import { useEffect, useState } from "react";
-import { getUsers } from "../../api/users";
+import { useEffect, useState, useRef } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { getUsers, IUser, GetUsersResponse } from "../../api/users";
 import { isAdult } from "../../utils/isAdult";
 
 interface UsersFormProps {
@@ -20,31 +20,92 @@ interface UsersFormProps {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+interface FormValues {
+  user: IUser | null;
+  gender: string;
+  role: string;
+  dob: string;
+  university: string;
+  graduationYear: string;
+  workplace: string;
+  jobDescription: string;
+}
+
 const UsersForm = ({ open, setOpen }: UsersFormProps) => {
-  const [userList, setUserList] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [gender, setGender] = useState("");
-  const [role, setRole] = useState("");
-  const [dob, setDob] = useState("");
-  const [university, setUniversity] = useState("");
-  const [graduationYear, setGraduationYear] = useState("");
-  const [workplace, setWorkplace] = useState("");
-  const [jobDescription, setJobDescription] = useState("");
+  const {
+    control,
+    reset,
+    setValue,
+    watch,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    defaultValues: {
+      user: null,
+      gender: "",
+      role: "",
+      dob: "",
+      university: "",
+      graduationYear: "",
+      workplace: "",
+      jobDescription: "",
+    },
+  });
+
+  const onSubmit = (data: FormValues) => {
+    console.log("submit", data);
+    // Реализуйте логику отправки формы
+  };
+
+  const [userList, setUserList] = useState<IUser[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [error, setError] = useState<string | null>(null);
+
+  const isFetching = useRef(false);
+
+  const fetchUsersData = async (pageNumber: number) => {
+    if (isFetching.current) {
+      console.log(`Запрос для страницы ${pageNumber} уже выполняется.`);
+      return;
+    }
+
+    isFetching.current = true;
+    setLoading(true);
+    setError(null); // Сброс ошибки перед новым запросом
+    console.log(`Запрос данных для страницы ${pageNumber}`);
+
+    try {
+      const response: GetUsersResponse = await getUsers(pageNumber);
+      console.log(`Получено ${response.data.length} пользователей с страницы ${pageNumber}`);
+
+      setUserList((prevUsers) => [...prevUsers, ...response.data]);
+      setTotalPages(response.total_pages);
+    } catch (error) {
+      console.error("Ошибка при загрузке пользователей:", error);
+      setError("Не удалось загрузить пользователей. Пожалуйста, попробуйте позже.");
+    }
+
+    setLoading(false);
+    isFetching.current = false;
+  };
 
   useEffect(() => {
-    const fetchUsersData = async () => {
-      setLoading(true);
-      try {
-        const users = await getUsers(1);
-        setUserList(users);
-      } catch (error) {
-        console.error("Ошибка при загрузке пользователей:", error);
-      }
-      setLoading(false);
-    };
-    fetchUsersData();
-  }, []);
+    if (open) {
+      setUserList([]);
+      setPage(1);
+      setTotalPages(1);
+      fetchUsersData(1);
+      reset();
+    }
+  }, [open, reset]);
+
+  useEffect(() => {
+    if (page > 1) {
+      fetchUsersData(page);
+    }
+  }, [page]);
 
   const handleClose = () => {
     setOpen(false);
@@ -53,46 +114,45 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
   const handleScroll = (event: React.UIEvent<HTMLUListElement>) => {
     const target = event.currentTarget;
     const bottom = target.scrollHeight === target.scrollTop + target.clientHeight;
-    if (bottom && !loading) {
-      console.log("Reached bottom of the list");
+
+    if (bottom && !loading && page < totalPages) {
+      console.log("Достигнут конец списка. Загрузка следующей страницы.");
+      setPage((prevPage) => prevPage + 1);
     }
   };
 
-  const handleGenderChange = (event: React.ChangeEvent<{ value: string }>) => {
-    const selectedGender = event.target.value;
-    setGender(selectedGender);
+  const selectedRole = watch("role");
 
-    if (selectedGender === "Мужской" && role === "Медсестра") {
-      setRole("Медбрат");
-    } else if (selectedGender === "Женский" && role === "Медбрат") {
-      setRole("Медсестра");
+  const handleGenderChange = (value: string) => {
+    setValue("gender", value, { shouldValidate: true });
+    if (value === "Мужской" && selectedRole === "Медсестра") {
+      setValue("role", "Медбрат", { shouldValidate: true });
+    } else if (value === "Женский" && selectedRole === "Медбрат") {
+      setValue("role", "Медсестра", { shouldValidate: true });
     }
   };
 
-  const handleRoleChange = (event: React.ChangeEvent<{ value: string }>) => {
-    const selectedRole = event.target.value;
-    setRole(selectedRole);
-
-    if (selectedRole === "Медсестра") {
-      setGender("Женский");
-    } else if (selectedRole === "Медбрат") {
-      setGender("Мужской");
+  const handleRoleChange = (value: string) => {
+    setValue("role", value, { shouldValidate: true });
+    if (value === "Медсестра") {
+      setValue("gender", "Женский", { shouldValidate: true });
+    } else if (value === "Медбрат") {
+      setValue("gender", "Мужской", { shouldValidate: true });
     }
-  };
-
-  const handleSubmit = () => {};
-  const handleSearch = (event: React.ChangeEvent<{}>, value: string) => {
-    setSearchTerm(value);
   };
 
   return (
-    <Modal open={open} onClose={() => setOpen(false)}>
+    <Modal open={open} onClose={handleClose}>
       <Box
+        component="form"
+        onSubmit={handleSubmit(onSubmit)}
         sx={{
           backgroundColor: "#fff",
           maxWidth: "768px",
+          maxHeight: "90vh",
+          overflowY: "auto",
+          padding: 2,
           margin: "auto",
-          padding: 3,
           borderRadius: 3,
           marginTop: 2,
         }}
@@ -101,53 +161,113 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
         <section>
           <h3>О себе</h3>
           <FormControl fullWidth sx={{ marginBottom: 2 }}>
-            <Autocomplete
-              disablePortal
-              options={userList}
-              getOptionLabel={(option) => `${option.last_name} ${option.first_name.charAt(0)}.`}
-              onInputChange={handleSearch}
-              renderInput={(params) => <TextField {...params} label="Пользователь" />}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              loading={loading}
-              noOptionsText="Нет пользователей"
-              slotProps={{
-                listbox: {
-                  onScroll: handleScroll,
-                  style: { maxHeight: 200, overflow: "auto" },
-                },
-              }}
+            <Controller
+              name="user"
+              control={control}
+              rules={{ required: "Пользователь обязателен" }}
+              render={({ field }) => (
+                <Autocomplete
+                  {...field}
+                  options={userList}
+                  getOptionLabel={(option) => `${option.last_name} ${option.first_name.charAt(0)}. (${option.id})`}
+                  onChange={(_, data) => field.onChange(data)}
+                  loading={loading}
+                  noOptionsText={error ? "Ошибка загрузки" : "Нет пользователей"}
+                  onInputChange={(_, value) => {
+                    // Реализуйте логику поиска, если необходимо
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Пользователь"
+                      error={Boolean(errors.user)}
+                      helperText={errors.user ? errors.user.message : ""}
+                    />
+                  )}
+                  slotProps={{
+                    listbox: {
+                      onScroll: handleScroll,
+                      style: { maxHeight: 200, overflow: "auto" },
+                    },
+                  }}
+                />
+              )}
             />
           </FormControl>
 
+          {error && <div style={{ color: "red", textAlign: "center", marginBottom: "16px" }}>{error}</div>}
+
           <Grid container spacing={2} sx={{ marginBottom: 2 }}>
             <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Пол" select value={gender} onChange={handleGenderChange}>
-                <MenuItem value="Мужской">Мужской</MenuItem>
-                <MenuItem value="Женский">Женский</MenuItem>
-              </TextField>
+              <Controller
+                name="gender"
+                control={control}
+                rules={{ required: "Пол обязателен" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="Пол"
+                    select
+                    onChange={(e) => handleGenderChange(e.target.value)}
+                    error={Boolean(errors.gender)}
+                    helperText={errors.gender ? errors.gender.message : ""}
+                  >
+                    <MenuItem value="Мужской">Мужской</MenuItem>
+                    <MenuItem value="Женский">Женский</MenuItem>
+                  </TextField>
+                )}
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Роль" select value={role} onChange={handleRoleChange}>
-                <MenuItem value="Медбрат">Медбрат</MenuItem>
-                <MenuItem value="Медсестра">Медсестра</MenuItem>
-                <MenuItem value="Доктор">Доктор</MenuItem>
-                <MenuItem value="Админ">Админ</MenuItem>
-              </TextField>
+              <Controller
+                name="role"
+                control={control}
+                rules={{ required: "Роль обязательна" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="Роль"
+                    select
+                    onChange={(e) => handleRoleChange(e.target.value)}
+                    error={Boolean(errors.role)}
+                    helperText={errors.role ? errors.role.message : ""}
+                  >
+                    <MenuItem value="Медбрат">Медбрат</MenuItem>
+                    <MenuItem value="Медсестра">Медсестра</MenuItem>
+                    <MenuItem value="Доктор">Доктор</MenuItem>
+                    <MenuItem value="Админ">Админ</MenuItem>
+                  </TextField>
+                )}
+              />
             </Grid>
           </Grid>
 
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Дата рождения"
-                type="date"
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                error={dob && !isAdult(dob) ? true : false}
-                helperText={dob && !isAdult(dob) ? "Возраст должен быть не младше 18 лет" : ""}
-                sx={{ input: { cursor: "pointer" } }}
+              <Controller
+                name="dob"
+                control={control}
+                rules={{
+                  required: "Дата рождения обязательна",
+                  validate: (value) => isAdult(value) || "Возраст должен быть не младше 18 лет",
+                }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="Дата рождения"
+                    type="date"
+                    onChange={(e) => field.onChange(e.target.value)}
+                    error={Boolean(errors.dob)}
+                    helperText={errors.dob ? errors.dob.message : ""}
+                    sx={{ input: { cursor: "pointer" } }}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                  />
+                )}
               />
             </Grid>
           </Grid>
@@ -155,61 +275,87 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
 
         <section>
           <h3>Образование</h3>
-          <TextField
-            fullWidth
-            label="ВУЗ"
-            value={university}
-            onChange={(e) => setUniversity(e.target.value)}
-            sx={{ marginBottom: 2 }}
+          <Controller
+            name="university"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                label="ВУЗ"
+                onChange={(e) => field.onChange(e.target.value)}
+                sx={{ marginBottom: 2 }}
+              />
+            )}
           />
-          <TextField
-            fullWidth
-            label="Год окончания"
-            type="number"
-            value={graduationYear}
-            onChange={(e) => setGraduationYear(e.target.value)}
-            sx={{ marginBottom: 2 }}
+          <Controller
+            name="graduationYear"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                label="Год окончания"
+                type="number"
+                onChange={(e) => field.onChange(e.target.value)}
+                sx={{ marginBottom: 2 }}
+              />
+            )}
           />
         </section>
 
         <section>
           <h3>Работа</h3>
-          <TextField
-            fullWidth
-            label="Место работы"
-            value={workplace}
-            onChange={(e) => setWorkplace(e.target.value)}
-            sx={{ marginBottom: 2 }}
+          <Controller
+            name="workplace"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                label="Место работы"
+                onChange={(e) => field.onChange(e.target.value)}
+                sx={{ marginBottom: 2 }}
+              />
+            )}
           />
-          {/* <TextField
-            fullWidth
-            label="Должностные обязанности"
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
-            sx={{ marginBottom: 2 }}
-          /> */}
-          <TextField
-            fullWidth
-            label="Должностные обязанности"
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
-            sx={{ marginBottom: 2 }}
-            multiline
-            rows={3} // Устанавливаем количество строк в textarea
+          <Controller
+            name="jobDescription"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                label="Должностные обязанности"
+                onChange={(e) => field.onChange(e.target.value)}
+                sx={{ marginBottom: 2 }}
+                multiline
+                rows={3}
+              />
+            )}
           />
         </section>
 
         <Button
+          type="submit" // Убедитесь, что тип кнопки установлен как "submit"
           variant="contained"
           color="primary"
-          onClick={handleSubmit}
           fullWidth
-          sx={{ marginBottom: 2, width: "max-content", display: "block", marginLeft: "auto", marginRight: "auto" }}
+          sx={{
+            marginBottom: 2,
+            width: "max-content",
+            display: "block",
+            marginLeft: "auto",
+            marginRight: "auto",
+          }}
         >
           Добавить/Сохранить
         </Button>
 
         {loading && <CircularProgress sx={{ display: "block", margin: "20px auto" }} />}
+        {!loading && page >= totalPages && (
+          <div style={{ textAlign: "center", marginTop: "16px", color: "gray" }}>Все пользователи загружены</div>
+        )}
       </Box>
     </Modal>
   );
