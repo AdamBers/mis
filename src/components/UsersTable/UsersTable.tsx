@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { getUsers } from "../../api/users"; // Импортируем функцию для получения пользователей
+import { getUsers } from "../../api/users";
 import { IUserResponse } from "../../types/user";
 
 interface UsersTableProps {
@@ -27,7 +27,7 @@ const UsersTable = ({ setOpen }: UsersTableProps) => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const fetchedUsers = await getUsers(); // Получаем пользователей
+        const fetchedUsers = await getUsers();
         setUsers(fetchedUsers.data);
       } catch (error) {
         console.error("Ошибка при загрузке пользователей", error);

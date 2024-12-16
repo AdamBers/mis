@@ -1,4 +1,3 @@
-// UsersForm.tsx
 import {
   Modal,
   Button,
@@ -54,7 +53,6 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
 
   const onSubmit = (data: FormValues) => {
     console.log("submit", data);
-    // Реализуйте логику отправки формы
   };
 
   const [userList, setUserList] = useState<IUser[]>([]);
@@ -73,7 +71,7 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
 
     isFetching.current = true;
     setLoading(true);
-    setError(null); // Сброс ошибки перед новым запросом
+    setError(null);
     console.log(`Запрос данных для страницы ${pageNumber}`);
 
     try {
@@ -173,9 +171,6 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
                   onChange={(_, data) => field.onChange(data)}
                   loading={loading}
                   noOptionsText={error ? "Ошибка загрузки" : "Нет пользователей"}
-                  onInputChange={(_, value) => {
-                    // Реализуйте логику поиска, если необходимо
-                  }}
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -337,7 +332,7 @@ const UsersForm = ({ open, setOpen }: UsersFormProps) => {
         </section>
 
         <Button
-          type="submit" // Убедитесь, что тип кнопки установлен как "submit"
+          type="submit"
           variant="contained"
           color="primary"
           fullWidth
