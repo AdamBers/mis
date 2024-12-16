@@ -1,3 +1,4 @@
+// UsersTable.tsx
 import { useEffect, useState } from "react";
 import {
   Table,
@@ -10,6 +11,7 @@ import {
   CircularProgress,
   Button,
   Avatar,
+  Typography,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -23,6 +25,7 @@ interface UsersTableProps {
 const UsersTable = ({ setOpen }: UsersTableProps) => {
   const [users, setUsers] = useState<IUserResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -31,6 +34,7 @@ const UsersTable = ({ setOpen }: UsersTableProps) => {
         setUsers(fetchedUsers.data);
       } catch (error) {
         console.error("Ошибка при загрузке пользователей", error);
+        setError("Не удалось загрузить пользователей.");
       } finally {
         setLoading(false);
       }
@@ -39,59 +43,72 @@ const UsersTable = ({ setOpen }: UsersTableProps) => {
     fetchUsers();
   }, []);
 
-  if (loading) {
-    return <CircularProgress />;
-  }
-  if (!users) {
-    return <p>Нет пользователей</p>;
-  }
-
   return (
     <>
-      <h3>Список пользователей</h3>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Аватар</TableCell>
-              <TableCell>Полное имя</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Пол</TableCell>
-              <TableCell>Дата рождения</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <Avatar alt={user.first_name} src={user.avatar} />
-                </TableCell>
-                <TableCell>{`${user.last_name} ${user.first_name[0]}.`}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>Не указано</TableCell>
-                <TableCell>Не указано</TableCell>
-                <TableCell>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<EditIcon sx={{ marginLeft: "8px" }} />}
-                    sx={{ marginRight: "10px" }}
-                    onClick={() => setOpen(true)}
-                  ></Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    size="small"
-                    sx={{ marginRight: "10px" }}
-                    startIcon={<DeleteIcon sx={{ marginLeft: "8px" }} />}
-                  ></Button>
-                </TableCell>
+      <Typography variant="h5" gutterBottom>
+        Список пользователей
+      </Typography>
+
+      {loading ? (
+        <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
+          <CircularProgress />
+        </div>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Аватар</TableCell>
+                <TableCell>Полное имя</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Пол</TableCell>
+                <TableCell>Дата рождения</TableCell>
+                <TableCell align="center">Действия</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <Avatar alt={user.first_name} src={user.avatar} />
+                  </TableCell>
+                  <TableCell>{`${user.last_name} ${user.first_name[0]}.`}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>Не указано</TableCell>
+                  <TableCell>Не указано</TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<EditIcon />}
+                      sx={{ marginRight: "10px" }}
+                      onClick={() => setOpen(true)}
+                    >
+                      Редактировать
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      startIcon={<DeleteIcon />}
+                      sx={{ marginRight: "10px" }}
+                      onClick={() => {}}
+                    >
+                      Удалить
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      {error && (
+        <Typography variant="body1" color="error" align="center" style={{ marginTop: "20px" }}>
+          {error}
+        </Typography>
+      )}
     </>
   );
 };
