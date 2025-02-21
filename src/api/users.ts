@@ -8,6 +8,12 @@ export interface IUser {
   first_name: string;
   last_name: string;
   avatar: string;
+  gender?: string;
+  role?: string;
+  dob?: Date | string;
+  university?: string;
+  workplace?: string;
+  jobDescription?: string;
 }
 
 export interface GetUsersResponse {
