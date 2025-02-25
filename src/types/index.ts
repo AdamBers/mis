@@ -12,18 +12,4 @@ export interface IUser {
   jobDescription?: string;
 }
 
-export interface FormValues {
-  user: IUser | null;
-  gender: string;
-  role: string;
-  dob: string;
-  university: string;
-  graduationYear: string;
-  workplace: string;
-  jobDescription: string;
-}
 
-export interface ModalProps {
-  isModalOpen: boolean;
-  handleModal: (value: boolean) => void;
-}

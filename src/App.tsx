@@ -1,15 +1,19 @@
-import { Box } from "@mui/material";
 import { useEffect, useState } from "react";
+import { Box } from "@mui/material";
 import UsersList from "./components/UsersList/UsersList";
-import UsersForm from "./components/UsersForm/UsersForm";
-import { IUser } from "./types";
+import UsersEditForm from "./components/UsersEditForm/UsersEditForm";
 import ModalForm from "./components/ModalForm/ModalForm";
+import Snackbar, { SnackbarCloseReason } from "@mui/material/Snackbar";
+import { IUser } from "./types";
 
 function App() {
   const [isSidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [isModalOpen, setModalOpen] = useState<boolean>(false);
   const [users, setUsers] = useState<IUser[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [currentUser, setCurrentUser] = useState<IUser | null>(null);
+  const [snackBarOpen, setSnackBarOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string>("");
 
   useEffect(() => {
     const storedUsers = localStorage.getItem("users");
@@ -18,38 +22,27 @@ function App() {
     }
   }, []);
 
-  const addUser = (user: IUser) => {
-    const updatedUsers = [...users, user];
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    setUsers(updatedUsers);
-  };
-
-  const deleteUser = (id: number) => {
-    if (id) {
-      let newUsers = users.filter((user) => user.id !== id);
-      localStorage.setItem("users", JSON.stringify(newUsers));
-      setUsers(newUsers);
-    }
-  };
-
-  const updateUsers = (user: IUser) => {
-    if (currentUserId !== null) {
-      const updatedUsers = users.map((existingUser) => (existingUser.id === currentUserId ? user : existingUser));
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
-      setUsers(updatedUsers);
-    }
-  };
-
-  const handleSidebar = (value: boolean) => {
+  const toggleSidebar = (value: boolean) => {
     setSidebarOpen(value);
   };
-  const handleModal = (value: boolean) => {
+
+  const toggleModal = (value: boolean) => {
     setModalOpen(value);
   };
+  const handleCloseSnackBar = (event: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackBarOpen(false);
+  };
+
   return (
     <Box
       sx={{
         display: "flex",
+        maxWidth: "1440px",
+        margin: "0 auto",
         justifyContent: "space-between",
         alignItems: "flex-start",
         flexDirection: {
@@ -58,26 +51,51 @@ function App() {
         },
       }}
     >
-      <UsersForm
+      <Snackbar
+        open={snackBarOpen}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        message={message}
+        onClose={handleCloseSnackBar}
+        autoHideDuration={5000}
+      ></Snackbar>
+      <UsersEditForm
         users={users}
         setUsers={setUsers}
         isModalOpen={isSidebarOpen}
-        handleSidebar={handleSidebar}
-        addUser={addUser}
-        handleModal={handleModal}
-        currentUserId={currentUserId}
-        updateUsers={updateUsers}
-        setCurrentUserId={setCurrentUserId}
+        toggleSidebar={toggleSidebar}
+        toggleModal={toggleModal}
+        currentUser={currentUser}
+        setCurrentUser={setCurrentUser}
+        snackBarOpen={snackBarOpen}
+        setSnackBarOpen={setSnackBarOpen}
+        loading={loading}
+        setLoading={setLoading}
+        setMessage={setMessage}
+        message={message}
       />
       <UsersList
-        isModalOpen={isSidebarOpen}
-        handleModal={handleSidebar}
         users={users}
-        currentUserId={currentUserId}
-        setCurrentUserId={setCurrentUserId}
-        deleteUser={deleteUser}
+        currentUser={currentUser}
+        setCurrentUser={setCurrentUser}
+        setUsers={setUsers}
+        toggleSidebar={toggleSidebar}
+        isSidebarOpen={isSidebarOpen}
+        snackBarOpen={snackBarOpen}
+        setSnackBarOpen={setSnackBarOpen}
+        loading={loading}
+        setLoading={setLoading}
+        setMessage={setMessage}
+        message={message}
       />
-      <ModalForm open={isModalOpen} handleModal={handleModal} addUser={addUser} />
+      <ModalForm
+        open={isModalOpen}
+        toggleModal={toggleModal}
+        users={users}
+        setUsers={setUsers}
+        setCurrentUser={setCurrentUser}
+        setSnackBarOpen={setSnackBarOpen}
+        setMessage={setMessage}
+      />
     </Box>
   );
 }

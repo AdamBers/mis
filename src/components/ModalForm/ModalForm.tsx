@@ -1,26 +1,50 @@
 import { Modal, Box, TextField, Button, Typography, Grid } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { IUser } from "../../types";
+import { addUserRemote } from "../../api/users";
 
 interface IModalFormProps {
   open: boolean;
-  handleModal: (value: boolean) => void;
-  userData: {
-    email: string;
-    first_name: string;
-    last_name: string;
-    avatar: string;
-  };
-  addUser: (data: IUser) => void;
+  toggleModal: (value: boolean) => void;
+  users: IUser[];
+  setUsers: (users: IUser[]) => void;
+  setCurrentUser: (user: IUser) => void;
+  setSnackBarOpen: (value: boolean) => void;
+  setMessage: (text: string) => void;
 }
 
-const ModalForm = ({ open, handleModal, userData, addUser }: IModalFormProps) => {
+const ModalForm = ({
+  open,
+  toggleModal,
+  users,
+  setUsers,
+  setCurrentUser,
+  setSnackBarOpen,
+  setMessage,
+}: IModalFormProps) => {
+  const addUser = async (user: IUser) => {
+    try {
+      const response = await addUserRemote(user);
+      if (response.status === 201) {
+        const updatedUsers = [...users, user];
+        localStorage.setItem("users", JSON.stringify(updatedUsers));
+        setUsers(updatedUsers);
+        setCurrentUser(user);
+        setSnackBarOpen(true);
+        setMessage("Пользователь успешно добавлен");
+      }
+    } catch (error: any) {
+      setSnackBarOpen(true);
+      setMessage("Ошибка при добавлении пользователя");
+      throw new Error(error || "Ошибка при добавлении пользователя");
+    }
+  };
   const [formData, setFormData] = useState({
-    id: Number(Date.now().toString()), // Инициализируем id текущей меткой времени
-    email: userData?.email || "",
-    first_name: userData?.first_name || "",
-    last_name: userData?.last_name || "",
-    avatar: userData?.avatar || "",
+    id: Number(Date.now().toString()),
+    email: "",
+    first_name: "",
+    last_name: "",
+    avatar: "",
   });
 
   const [errors, setErrors] = useState({
@@ -30,10 +54,6 @@ const ModalForm = ({ open, handleModal, userData, addUser }: IModalFormProps) =>
     last_name: false,
     avatar: false,
   });
-
-  const handleClose = () => {
-    handleModal(false);
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -45,7 +65,6 @@ const ModalForm = ({ open, handleModal, userData, addUser }: IModalFormProps) =>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     const newErrors = {
       id: false,
       email: !formData.email,
@@ -53,23 +72,17 @@ const ModalForm = ({ open, handleModal, userData, addUser }: IModalFormProps) =>
       last_name: !formData.last_name,
       avatar: !formData.avatar,
     };
-
     setErrors(newErrors);
-
-    // Проверяем, есть ли ошибки
     if (Object.values(newErrors).includes(true)) {
       return;
     }
-
-    // Здесь можно добавить логику для отправки данных формы
-    console.log("Form submitted", formData);
     addUser(formData);
     setFormData({ id: 0, email: "", first_name: "", last_name: "", avatar: "" });
-    handleClose(); // Закрыть модальное окно после успешной отправки
+    toggleModal(false);
   };
 
   return (
-    <Modal open={open} onClose={handleClose}>
+    <Modal open={open} onClose={() => toggleModal(false)}>
       <Box
         sx={{
           position: "absolute",
@@ -89,7 +102,6 @@ const ModalForm = ({ open, handleModal, userData, addUser }: IModalFormProps) =>
 
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
-            {/* Поле для Email */}
             <Grid item xs={12}>
               <TextField
                 label="Email"
@@ -104,7 +116,6 @@ const ModalForm = ({ open, handleModal, userData, addUser }: IModalFormProps) =>
               />
             </Grid>
 
-            {/* Поле для First Name */}
             <Grid item xs={12}>
               <TextField
                 label="First Name"
@@ -118,7 +129,6 @@ const ModalForm = ({ open, handleModal, userData, addUser }: IModalFormProps) =>
               />
             </Grid>
 
-            {/* Поле для Last Name */}
             <Grid item xs={12}>
               <TextField
                 label="Last Name"
@@ -132,7 +142,6 @@ const ModalForm = ({ open, handleModal, userData, addUser }: IModalFormProps) =>
               />
             </Grid>
 
-            {/* Поле для Avatar URL */}
             <Grid item xs={12}>
               <TextField
                 label="Avatar URL"
