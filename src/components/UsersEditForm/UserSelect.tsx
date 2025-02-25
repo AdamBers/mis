@@ -15,6 +15,7 @@ interface UserSelectProps {
 }
 
 const UserSelect = ({
+  // setUsers,
   users,
   isModalOpen,
   toggleModal,
@@ -101,7 +102,7 @@ const UserSelect = ({
             <Autocomplete
               {...field}
               options={userList}
-              getOptionLabel={(option) => `${option.last_name} ${option.first_name.charAt(0)}.`}
+              getOptionLabel={(option) => `${option?.last_name || "---"} ${option?.first_name?.charAt(0) || " "}`}
               onChange={(_, selectedUser) => {
                 if (selectedUser) {
                   setCurrentUser(selectedUser);
