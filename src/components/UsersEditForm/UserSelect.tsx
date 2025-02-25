@@ -15,7 +15,6 @@ interface UserSelectProps {
 }
 
 const UserSelect = ({
-  // setUsers,
   users,
   isModalOpen,
   toggleModal,
@@ -30,14 +29,7 @@ const UserSelect = ({
   const isFetching = useRef(false);
   const [page, setPage] = useState(1);
 
-  const {
-    // setValue,
-    // watch,
-    // handleSubmit,
-    control,
-    reset,
-    formState: { errors },
-  } = useForm<IUser>({
+  const { control, reset } = useForm<IUser>({
     defaultValues: {
       id: 0,
       first_name: "",
@@ -101,10 +93,11 @@ const UserSelect = ({
     <>
       <FormControl fullWidth sx={{ marginBottom: 2 }}>
         <Controller
-          name="user"
+          name="id"
           control={control}
           rules={{ required: "Пользователь обязателен" }}
           render={({ field }) => (
+            // @ts-ignore
             <Autocomplete
               {...field}
               options={userList}
@@ -126,15 +119,7 @@ const UserSelect = ({
                   </Box>
                 )
               }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Выберите пользователя"
-                  // error={Boolean(errors.user)}
-                  // helperText={errors.user ? errors.user.message : ""}
-                  required
-                />
-              )}
+              renderInput={(params) => <TextField {...params} label="Выберите пользователя" required />}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               getOptionDisabled={(option) => users.some((user) => user.id === option.id)}
               slotProps={{

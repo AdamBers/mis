@@ -33,6 +33,7 @@ function App() {
     if (reason === "clickaway") {
       return;
     }
+    console.log(event);
 
     setSnackBarOpen(false);
   };
