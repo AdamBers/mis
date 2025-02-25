@@ -1,6 +1,6 @@
 @font-face {
   font-family: "Proxima Nova";
-  src: url("../public/fonts/proximanova_regular.ttf") format("truetype");
+  src: url("/fonts/proximanova_regular.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
@@ -15,7 +15,7 @@ body {
   min-width: 100vw;
   min-height: 100vh;
   font-family: "Proxima Nova", sans-serif;
-  background-image: url("./assets/img/bg.svg");
+  background-image: url("/assets/img/bg.svg");
   background-size: cover;
 }
 
