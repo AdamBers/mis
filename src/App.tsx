@@ -29,12 +29,10 @@ function App() {
   const toggleModal = (value: boolean) => {
     setModalOpen(value);
   };
-  const handleCloseSnackBar = (event: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
+  const handleCloseSnackBar = (_event: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
     if (reason === "clickaway") {
       return;
     }
-    console.log(event);
-
     setSnackBarOpen(false);
   };
 
